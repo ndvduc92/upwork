@@ -1,28 +1,36 @@
 <template>
-  <div class="home">
-    <br>
-    <h1>
-      Active Users
-    </h1>
-    <input v-on:keyup.enter="onSaveUser" v-model="username"/>
-    <div class="">
-      <div v-for="user in users" :key="user.id">
+  <div class="container">
+    <br />
+    <h2>Active Users</h2>
+    <div class="mb-3">
+      <input
+        type="text"
+        class="form-control"
+        id="formGroupExampleInput"
+        v-on:keyup.enter="onSaveUser"
+        v-model="username"
+        placeholder="Enter username and press Enter"
+      />
+    </div>
+    <br />
+    <ul class="list-group">
+      <li class="list-group-item" v-for="user in users" :key="user.id">
         <router-link
           :to="{
             name: 'UserSkill',
-            params: { username: user.username }
+            params: { username: user.username },
           }"
         >
-          <h2>{{ user.username }}</h2>
+          <span>{{ user.username }}</span>
         </router-link>
-      </div>
-    </div>
+      </li>
+    </ul>
   </div>
 </template>
 
 <script>
-import axios from "axios"
-import CONSTANTS from '@/helpers/constants'
+import axios from "axios";
+import CONSTANTS from "@/helpers/constants";
 
 export default {
   name: "UserList",
@@ -30,26 +38,37 @@ export default {
   data() {
     return {
       users: [],
-      username: ""
-    }
+      username: "",
+    };
   },
   mounted() {
-    this.getUsers()
+    this.getUsers();
   },
   methods: {
     async onSaveUser() {
-       await axios.post(`${CONSTANTS.API_ENDPOINT}/members`, { username: this.username}).then(res => {
-        this.getUsers()
-        this.username = ""
-      }).catch(err => {
-        alert("Username already exist.")
-      });
+      if (!this.username) {
+        alert("Username is required")
+        return
+      }
+      if (!this.username.match(/^[0-9a-z]+$/)) {
+        alert("The username must be alphanumeric characters only")
+        return
+      }
+      await axios
+        .post(`${CONSTANTS.API_ENDPOINT}/members`, { username: this.username })
+        .then((res) => {
+          this.getUsers();
+          this.username = "";
+        })
+        .catch((err) => {
+          alert("Username already exist.");
+        });
     },
     async getUsers() {
-      await axios.get(`${CONSTANTS.API_ENDPOINT}/members`).then(res => {
-        this.users = res.data
+      await axios.get(`${CONSTANTS.API_ENDPOINT}/members`).then((res) => {
+        this.users = res.data;
       });
-    }
-  }
+    },
+  },
 };
 </script>

@@ -6,16 +6,29 @@
         <div class="col-12">
           <div class="input-group">
             <div class="input-group-text">Skill</div>
-            <input type="text" class="form-control"  v-model="skill.skill">
+            <input type="text" class="form-control" v-model="skill.skill" />
           </div>
         </div>
 
         <div class="col-12">
-          <input class="form-range" type="range" v-model="skill.level" min="0" max="10" />
+          <input
+            class="form-range"
+            type="range"
+            v-model="skill.level"
+            min="0"
+            max="10"
+          />
         </div>
 
         <div class="col-12">
-          <button @click="onSaveSkill" class="btn btn-sm btn-success">{{ skill.id ? "Update" : "Add"}}</button>
+          <button @click="onSaveSkill" class="btn btn-success">
+            {{ skill.id ? "Update" : "Add" }}
+          </button>
+        </div>
+        <div class="col-12" v-if="skill.id">
+          <button type="button" class="btn btn-secondary" @click="onCancel">
+            Cancel
+          </button>
         </div>
       </div>
     </section>
@@ -27,7 +40,11 @@
         <th>Action</th>
       </tr>
       <tr v-for="(skill, index) in skills" :key="index">
-        <td> <span @click="onUpdate(skill)" class="skill-name">{{ skill.skill }}</span></td>
+        <td>
+          <span @click="onUpdate(skill)" class="skill-name">{{
+            skill.skill
+          }}</span>
+        </td>
         <td>
           <div class="progress">
             <div
@@ -66,59 +83,74 @@
 </template>
 <script>
 import axios from "axios";
-import CONSTANTS from '@/helpers/constants'
-
-const defautSkill = {
-  id: null,
-  level: 5,
-  skill: "",
-}
+import CONSTANTS from "@/helpers/constants";
 
 export default {
   data() {
     return {
       skills: [],
-      skill: defautSkill
+      skill: {
+        id: null,
+        level: 5,
+        skill: ""
+      }
     };
   },
   mounted() {
-    this.getSkills()
+    this.getSkills();
   },
   methods: {
     async getSkills() {
-      await axios.get(`${CONSTANTS.API_ENDPOINT}/members/${this.$route.params.username}/skills`).then((res) => {
-        this.skills = res.data;
-      });
+      await axios
+        .get(`${CONSTANTS.API_ENDPOINT}/members/${this.$route.params.username}/skills`)
+        .then((res) => {
+          this.skills = res.data;
+        });
     },
     async onSaveSkill() {
       if (!this.skill.skill) {
-        alert("Skill is required!")
-        return
+        alert("Skill is required!");
+        return;
       }
       if (!this.skill.id) {
-        await axios.post(`${CONSTANTS.API_ENDPOINT}/members/${this.$route.params.username}/skills`, this.skill).then(res => {
-          this.getSkills()
-          this.skill = defautSkill
-        });
+        await axios.post(`${CONSTANTS.API_ENDPOINT}/members/${this.$route.params.username}/skills`,this.skill)
+          .then((res) => {
+            this.getSkills();
+            this.resetSkill();
+          });
       } else {
-        await axios.put(`${CONSTANTS.API_ENDPOINT}/members/${this.$route.params.username}/skills/${this.skill.id}`, this.skill).then(res => {
-          this.getSkills()
-          this.skill = defautSkill
-        });
+        await axios.put(`${CONSTANTS.API_ENDPOINT}/members/${this.$route.params.username}/skills/${this.skill.id}`,this.skill)
+          .then((res) => {
+            this.getSkills();
+            this.resetSkill();
+          });
       }
     },
     async onDelete(id) {
-      await axios.delete(`${CONSTANTS.API_ENDPOINT}/members/${this.$route.params.username}/skills/${id}`, this.skill).then(res => {
-        this.getSkills()
-        if (this.skill.id) {
-          this.skill = defautSkill
-        }
-      });
+      if (confirm("Do you really want to delete?")) {
+        await axios.delete(`${CONSTANTS.API_ENDPOINT}/members/${this.$route.params.username}/skills/${id}`,this.skill)
+          .then((res) => {
+            this.getSkills();
+            if (this.skill.id) {
+              this.resetSkill();
+            }
+          });
+      }
     },
     async onUpdate(skill) {
-      this.skill = skill
+      this.skill.id = skill.id
+      this.skill.skill = skill.skill
+      this.skill.level = skill.level
     },
-  },
+    onCancel() {
+      this.resetSkill();
+    },
+    resetSkill() {
+      this.skill.id = null
+      this.skill.skill = ""
+      this.skill.level = 5
+    }
+  }
 };
 </script>
 
